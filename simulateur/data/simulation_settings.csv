@@ -1,0 +1,2 @@
+max_users,max_companies,timer_step,fluctuation_rate
+100,50,1,0.1

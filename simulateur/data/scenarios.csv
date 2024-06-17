@@ -1,0 +1,2 @@
+name,description,backstory,difficulty_level,duration,companies,stocks,users,teams,events,triggers,custom_stats
+ScenarioA,Description for Scenario A,Backstory for Scenario A,Easy,3600,CompanyA,CompanyA Stock,johndoe,TeamA,EventA,TriggerA,StatA
