@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simulation Graph</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script>
+        // Set locale for date-fns
+        const enUS = {
+            formats: {
+                date: 'yyyy-MM-dd',
+                time: 'HH:mm:ss',
+                datetime: 'yyyy-MM-dd HH:mm:ss'
+            },
+            formatDistance: function (token, count, options) {
+                return {
+                    lessThanXSeconds: 'less than a second',
+                    xSeconds: count + ' seconds',
+                    halfAMinute: 'half a minute',
+                    lessThanXMinutes: count + ' minutes',
+                    xMinutes: count + ' minutes',
+                    aboutXHours: count + ' hours',
+                    xHours: count + ' hours',
+                    xDays: count + ' days',
+                    aboutXMonths: count + ' months',
+                    xMonths: count + ' months',
+                    aboutXYears: count + ' years',
+                    xYears: count + ' years',
+                    overXYears: count + ' years',
+                    almostXYears: count + ' years'
+                }[token];
+            },
+            localize: {
+                ordinalNumber: function (dirtyNumber, options) {
+                    var number = Number(dirtyNumber);
+                    return number + (number === 1 ? 'st' : 'th');
+                },
+                era: function (dirtyEra) {
+                    return dirtyEra;
+                },
+                quarter: function (dirtyQuarter, options) {
+                    return dirtyQuarter;
+                },
+                month: function (dirtyMonth, options) {
+                    return dirtyMonth;
+                },
+                day: function (dirtyDay, options) {
+                    return dirtyDay;
+                },
+                dayPeriod: function (dirtyDayPeriod, options) {
+                    return dirtyDayPeriod;
+                }
+            },
+            options: {
+                weekStartsOn: 0,
+                firstWeekContainsDate: 1
+            }
+        };
+        Chart._adapters._date.override({
+            locale: enUS
+        });
+
+        let protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        let socket = new WebSocket(protocol + '//' + window.location.host + '/ws/simulation/');
+
+        socket.onmessage = function(e) {
+            let data = JSON.parse(e.data);
+            updateChart(data);
+        };
+
+        function updateChart(data) {
+            const assetName = data.name;
+            let dataset = simulationChart.data.datasets.find(ds => ds.label === assetName);
+            if (!dataset) {
+                dataset = {
+                    label: assetName,
+                    data: [],
+                    fill: false,
+                    borderColor: getRandomColor(),
+                };
+                simulationChart.data.datasets.push(dataset);
+            }
+            dataset.data.push({ x: new Date(data.timestamp), y: data.close });
+            simulationChart.update();
+        }
+
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+    </script>
+</head>
+<body>
+    <h1>Simulation Graph</h1>
+    <canvas id="simulationChart" width="400" height="400"></canvas>
+
+    <script>
+        const ctx = document.getElementById('simulationChart').getContext('2d');
+        const simulationChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: []
+            },
+            options: {
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'second'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,2 +1,2 @@
-name,description,backstory,difficulty_level,duration,companies,stocks,users,teams,events,triggers,custom_stats
-ScenarioA,Description for Scenario A,Backstory for Scenario A,Easy,3600,CompanyA,CompanyA Stock,johndoe,TeamA,EventA,TriggerA,StatA
+name,description,backstory,difficulty_level,duration,companies,stocks,users,teams,events,triggers,custom_stats,simulation_settings
+ScenarioA,Description for Scenario A,Backstory for Scenario A,Easy,3600,"Air Munegu International;B&C Laser;Cambridge City Football Club;Coaks;Cryptokrone;Hexium;Happy Rabbit Pharma;Minerrain Tout Terrain;Smith Motors;New Bank of Shanghai;Blue Bacon Batteries;Chargex Bank;Costal Construction and Engineering Group;Ellis & Vincent Transportation;Industrial Forestry Inc.;PyraMD;RD Consulting Group;SharePhase;Solarama;Wang Telecommunication","Air Munegu International Stock;B&C Laser Stock",johndoe,TeamA,EventA,TriggerA,StatA,1

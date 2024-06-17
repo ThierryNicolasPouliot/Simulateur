@@ -1,34 +1,43 @@
+# simulation/management/commands/seed_database.py
 import csv
 from datetime import datetime
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
+from django.db import transaction
 from simulation.models import Company, Stock, Cryptocurrency, Team, UserProfile, Event, Trigger, CustomStat, SimulationSettings, Scenario, Portfolio, TransactionHistory
 
 class Command(BaseCommand):
     help = 'Seed the database with initial data from CSV files'
 
     def handle(self, *args, **kwargs):
-        self.seed_users()
-        self.seed_companies()
-        self.seed_stocks()
-        self.seed_cryptocurrencies()
-        self.seed_teams()
-        self.seed_events()
-        self.seed_triggers()
-        self.seed_custom_stats()
-        self.seed_simulation_settings()
-        self.seed_scenarios()
-        self.seed_portfolios()
-        self.seed_transaction_history()
+        try:
+            with transaction.atomic():
+                self.seed_users()
+                self.seed_companies()
+                self.seed_stocks()
+                self.seed_cryptocurrencies()
+                self.seed_teams()
+                self.seed_events()
+                self.seed_triggers()
+                self.seed_custom_stats()
+                self.seed_simulation_settings()
+                self.seed_scenarios()
+                self.seed_portfolios()
+                self.seed_transaction_history()
+            self.stdout.write(self.style.SUCCESS('Successfully seeded the database'))
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f'Error occurred: {e}'))
 
     def seed_users(self):
         with open('data/users.csv', newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
-                user = User.objects.create_user(
+                user, created = User.objects.get_or_create(
                     username=row['username'],
-                    email=row['email'],
-                    password=row['password']
+                    defaults={
+                        'email': row['email'],
+                        'password': row['password']
+                    }
                 )
                 UserProfile.objects.create(
                     user=user,
@@ -127,19 +136,25 @@ class Command(BaseCommand):
                     max_users=int(row['max_users']),
                     max_companies=int(row['max_companies']),
                     timer_step=int(row['timer_step']),
-                    fluctuation_rate=float(row['fluctuation_rate'])
+                    interval=int(row['interval']),
+                    max_interval=int(row['max_interval']),
+                    fluctuation_rate=float(row['fluctuation_rate']),
+                    time_unit=row['time_unit'],
+                    close_stock_market_at_night=row['close_stock_market_at_night']
                 )
 
     def seed_scenarios(self):
         with open('data/scenarios.csv', newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
+                simulation_settings = SimulationSettings.objects.get(id=int(row['simulation_settings']))
                 scenario = Scenario.objects.create(
                     name=row['name'],
                     description=row['description'],
                     backstory=row['backstory'],
                     difficulty_level=row['difficulty_level'],
-                    duration=int(row['duration'])
+                    duration=int(row['duration']),
+                    simulation_settings=simulation_settings
                 )
                 companies = Company.objects.filter(name__in=row['companies'].split(';'))
                 stocks = Stock.objects.filter(company__name__in=row['stocks'].split(';'))
@@ -155,12 +170,6 @@ class Command(BaseCommand):
                 scenario.events.set(events)
                 scenario.triggers.set(triggers)
                 scenario.custom_stats.set(custom_stats)
-
-                # Fetch and assign the SimulationSettings instance
-                simulation_settings = SimulationSettings.objects.get(pk=1)  # Adjust this to fetch the correct SimulationSettings object
-                scenario.simulation_settings = simulation_settings
-                scenario.save()
-
 
     def seed_portfolios(self):
         with open('data/portfolios.csv', newline='') as csvfile:

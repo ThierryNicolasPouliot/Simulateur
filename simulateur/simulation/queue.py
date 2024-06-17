@@ -1,6 +1,7 @@
 from collections import deque
+from datetime import timezone
 from django.db import transaction
-from .models import TransactionHistory
+from simulation.models import TransactionHistory, SimulationData
 
 class BuySellQueue:
     def __init__(self):
@@ -14,6 +15,7 @@ class BuySellQueue:
         self.sell_queue.append((user, asset, amount, price))
 
     def process_queues(self):
+        transactions = []
         while self.buy_queue and self.sell_queue:
             buy_order = self.buy_queue.popleft()
             sell_order = self.sell_queue.popleft()
@@ -21,7 +23,8 @@ class BuySellQueue:
             # Match the buy and sell orders
             if buy_order[3] >= sell_order[3]:  # Buy price >= Sell price
                 matched_price = (buy_order[3] + sell_order[3]) / 2
-                self.execute_transaction(buy_order, sell_order, matched_price)
+                transactions.append(self.execute_transaction(buy_order, sell_order, matched_price))
+        return transactions
 
     @transaction.atomic
     def execute_transaction(self, buy_order, sell_order, price):
@@ -40,6 +43,15 @@ class BuySellQueue:
             buyer.save()
 
             # Log the transaction
+            transaction = {
+                'buyer': buyer.user.username,
+                'seller': seller.user.username,
+                'asset': asset.name,
+                'amount': amount,
+                'price': price,
+                'timestamp': timezone.now().isoformat()
+            }
+
             TransactionHistory.objects.create(
                 portfolio=buyer.portfolio,
                 asset=asset.name,
@@ -59,6 +71,7 @@ class BuySellQueue:
             # Adjust the remaining sell order if any
             if sell_amount > amount:
                 self.add_to_sell_queue(seller, asset, sell_amount - amount, sell_price)
+            return transaction
         else:
             # Partial transaction
             seller.portfolio.stocks.remove(asset)
@@ -71,6 +84,15 @@ class BuySellQueue:
             buyer.save()
 
             # Log the partial transaction
+            transaction = {
+                'buyer': buyer.user.username,
+                'seller': seller.user.username,
+                'asset': asset.name,
+                'amount': sell_amount,
+                'price': price,
+                'timestamp': timezone.now().isoformat()
+            }
+
             TransactionHistory.objects.create(
                 portfolio=buyer.portfolio,
                 asset=asset.name,
@@ -89,5 +111,6 @@ class BuySellQueue:
 
             # Put the remaining buy order back to the queue
             self.add_to_buy_queue(buyer, asset, amount - sell_amount, buy_price)
+            return transaction
 
 buy_sell_queue = BuySellQueue()
