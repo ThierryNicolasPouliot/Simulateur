@@ -1,7 +1,11 @@
+# simulation/logic/price_update.py
+
 import random
 import numpy as np
 import noise
 import logging
+from django.utils import timezone
+from simulation.models import TransactionHistory
 
 logger = logging.getLogger(__name__)
 
@@ -25,14 +29,16 @@ def apply_random_fluctuation(asset, time_step, fluctuation_rate, noise_function)
     noise_functions = {
         'brownian': apply_brownian_motion,
         'monte_carlo': apply_monte_carlo,
-        'perlin': apply_perlin_noise
+        'perlin': apply_perlin_noise,
+        'other': apply_other_noise
     }
-    noise_func = noise_functions.get(noise_function, apply_brownian_motion)
+    noise_func = noise_functions.get(noise_function, apply_other_noise)
     noise_func(asset, dt, fluctuation_rate)
 
 def apply_brownian_motion(asset, dt, fluctuation_rate):
     mu, sigma = 0.001, 0.02
-    sigma = sigma * 10 if random.random() < 0.01 else sigma
+    if random.random() < 0.01:
+        sigma *= 10
     random_shock = np.random.normal(0, sigma * np.sqrt(dt))
     price_change = (mu - 0.5 * sigma**2) * dt + random_shock
     asset.price *= np.exp(price_change)
@@ -47,6 +53,10 @@ def apply_perlin_noise(asset, dt, fluctuation_rate):
     perlin_value = noise.pnoise1(time * fluctuation_rate)
     asset.price += perlin_value
 
+def apply_other_noise(asset, dt, fluctuation_rate):
+    random_fluctuation = np.random.normal(0, fluctuation_rate * np.sqrt(dt))
+    asset.price += random_fluctuation
+
 def update_ohlc(asset):
     if asset.open_price == 0:
         asset.open_price = float(asset.price)
@@ -54,3 +64,13 @@ def update_ohlc(asset):
     asset.low_price = min(asset.low_price, asset.price)
     asset.close_price = float(asset.price)
     asset.save()
+
+def log_transactions(transactions):
+    for transaction in transactions:
+        TransactionHistory.objects.create(
+            portfolio=transaction['portfolio'],
+            asset=transaction['asset'],
+            transaction_type=transaction['transaction_type'],
+            amount=transaction['amount'],
+            price=transaction['price']
+        )

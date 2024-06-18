@@ -1,3 +1,4 @@
+# simulation/urls.py
 from django.urls import path
 from .views import (
     HomeView,
@@ -21,7 +22,6 @@ from .views import (
     Signup,
     Login,
     SimulationGraphView,
-    SimulationGraphImageView
 )
 
 urlpatterns = [
@@ -46,6 +46,4 @@ urlpatterns = [
     path('signup/', Signup.as_view(), name='signup'),
     path('login/', Login.as_view(), name='login'),
     path('graph/', SimulationGraphView.as_view(), name='simulation-graph'),
-    path('graph/image/', SimulationGraphImageView.as_view(), name='simulation-graph-image'),
 ]
-

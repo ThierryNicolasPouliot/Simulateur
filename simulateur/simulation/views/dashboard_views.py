@@ -1,10 +1,7 @@
-# simulation/views/dashboard_views.py
-
 from django.shortcuts import render
 from django.views import View
 
-from .models import UserProfile, Stock, Cryptocurrency, Event, Portfolio, TransactionHistory
-
+from simulation.models import UserProfile, Stock, Cryptocurrency, Event, Portfolio, TransactionHistory
 
 class HomeView(View):
     def get(self, request):

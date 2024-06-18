@@ -4,22 +4,13 @@ from django.utils import timezone
 from channels.layers import get_channel_layer
 from simulation.models import Scenario, SimulationData, Stock, Cryptocurrency
 from simulation.logic.queue import buy_sell_queue
-from simulation.logic.event_handlers import apply_events, apply_triggers, apply_random_fluctuation
-from simulation.logic.price_updates import update_asset_price, update_ohlc, log_transactions
-from simulation.logic.utils import is_market_open, send_ohlc_update
+from simulation.logic.event_handlers import apply_events, apply_triggers, apply_random_fluctuation, update_ohlc
+from simulation.logic.transactions import log_transactions
+from simulation.logic.utils import is_market_open, send_ohlc_update, TIME_UNITS
 
 logger = logging.getLogger(__name__)
 
 class SimulationManager:
-    TIME_UNITS = {
-        'second': 1,
-        'minute': 60,
-        'hour': 3600,
-        'day': 86400,
-        'month': 2592000,
-        'year': 31536000
-    }
-
     def __init__(self, scenario_id, run_duration=100000):
         self.scenario = Scenario.objects.get(id=scenario_id)
         self.channel_layer = get_channel_layer()
@@ -28,8 +19,8 @@ class SimulationManager:
         self.run_duration = run_duration
 
         settings = self.scenario.simulation_settings
-        self.time_step = settings.timer_step * self.TIME_UNITS[settings.timer_step_unit]
-        self.interval = settings.interval * self.TIME_UNITS[settings.interval_unit]
+        self.time_step = settings.timer_step * TIME_UNITS[settings.timer_step_unit]
+        self.interval = settings.interval * TIME_UNITS[settings.interval_unit]
         self.close_stock_market_at_night = settings.close_stock_market_at_night
         self.fluctuation_rate = settings.fluctuation_rate
         self.noise_function = settings.noise_function.lower()
@@ -39,7 +30,7 @@ class SimulationManager:
 
         logger.info(f'Starting simulation for scenario {self.scenario} with time step {self.time_step} seconds')
 
-    def start_simulation(self):
+    def start_simulation(self, time_unit='second'):
         self.running = True
         self.simulation_data = SimulationData.objects.create(scenario=self.scenario)
         start_time = timezone.now()
@@ -67,6 +58,10 @@ class SimulationManager:
         finally:
             self.stop_simulation()
 
+    def pause_simulation(self):
+        self.running = False
+        logger.info('Simulation paused')
+
     def stop_simulation(self):
         if self.simulation_data:
             self.simulation_data.stop_simulation()
@@ -74,35 +69,15 @@ class SimulationManager:
         logger.info('Simulation stopped')
 
     def update_prices(self, current_time):
-        updated_stocks = []
-        updated_cryptos = []
-
         for company in self.scenario.companies.all():
-            if stock := company.stock_set.first():
+            stock = company.stock_set.first()
+            if stock:
                 self.apply_changes(stock, current_time)
                 self.stock_prices[stock.company.name].append(stock.close_price)
-                updated_stocks.append({
-                    'stockName': stock.company.name,
-                    'stock': {
-                        'price': stock.price,
-                        'valueChange': stock.value_change,
-                        'valueHistory': stock.value_history,
-                        'quantity': stock.quantity
-                    }
-                })
 
         for crypto in self.scenario.cryptocurrencies.all():
             self.apply_changes(crypto, current_time)
             self.crypto_prices[crypto.name].append(crypto.close_price)
-            updated_cryptos.append({
-                'stockName': crypto.name,
-                'stock': {
-                    'price': crypto.price,
-                    'valueChange': crypto.value_change,
-                    'valueHistory': crypto.value_history,
-                    'quantity': crypto.quantity
-                }
-            })
 
         self.simulation_data.end_time = current_time
         self.simulation_data.save()
@@ -119,3 +94,16 @@ class SimulationManager:
                 send_ohlc_update(self.channel_layer, stock, 'stock')
         for crypto in self.scenario.cryptocurrencies.all():
             send_ohlc_update(self.channel_layer, crypto, 'cryptocurrency')
+class SimulationManagerSingleton:
+    _instances = {}
+
+    @classmethod
+    def get_instance(cls, scenario_id):
+        if scenario_id not in cls._instances:
+            cls._instances[scenario_id] = SimulationManager(scenario_id)
+        return cls._instances[scenario_id]
+
+    @classmethod
+    def remove_instance(cls, scenario_id):
+        if scenario_id in cls._instances:
+            del cls._instances[scenario_id]

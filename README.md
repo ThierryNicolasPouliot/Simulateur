@@ -102,6 +102,14 @@ Follow the prompts to set up the superadmin credentials.
     npm run dev
     ```
 
+### Running the Daphne Server for ASGI
+
+To run the Daphne server with the ASGI application, use the following command:
+
+```bash
+daphne -p 8000 simulateur.asgi:application
+```
+
 ## Contributing
 
 Contributions are welcome! Please fork the repository and create a pull request with your changes.
@@ -109,3 +117,99 @@ Contributions are welcome! Please fork the repository and create a pull request 
 ## License
 
 This project is licensed under the MIT License
+
+## Data
+
+The project includes the following CSV files for initial data setup:
+
+```plaintext
+.
+├── data
+│   ├── companies.csv
+│   ├── cryptocurrencies.csv
+│   ├── custom_stats.csv
+│   ├── events.csv
+│   ├── portfolios.csv
+│   ├── scenarios.csv
+│   ├── simulation_settings.csv
+│   ├── stocks.csv
+│   ├── teams.csv
+│   ├── transaction_history.csv
+│   ├── triggers.csv
+│   └── users.csv
+```
+
+## File Structure
+
+Here is a brief overview of the project file structure:
+
+```plaintext
+.
+├── Dockerfile
+├── data
+├── db.sqlite3
+├── docker-compose.yml
+├── manage.py
+├── package-lock.json
+├── package.json
+├── requirements.txt
+├── simulateur
+│   ├── asgi.py
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+├── simulation
+│   ├── admin.py
+│   ├── apps.py
+│   ├── channels
+│   │   ├── consumers.py
+│   │   └── routing.py
+│   ├── decorators.py
+│   ├── logic
+│   │   ├── event_handlers.py
+│   │   ├── price_update.py
+│   │   ├── queue.py
+│   │   ├── simulation_manager.py
+│   │   ├── transactions.py
+│   │   └── utils.py
+│   ├── management
+│   │   ├── commands
+│   │   │   ├── clean_database.py
+│   │   │   ├── seed_database.py
+│   │   │   ├── start_simulation.py
+│   ├── migrations
+│   ├── models.py
+│   ├── serializers.py
+│   ├── templates
+│   │   └── simulation
+│   │       ├── admin_dashboard.html
+│   │       ├── buy_sell.html
+│   │       ├── graph.html
+│   │       ├── home.html
+│   │       ├── market_overview.html
+│   │       ├── team_dashboard.html
+│   │       └── user_dashboard.html
+│   ├── tests.py
+│   ├── urls.py
+│   └── views
+│       ├── auth_views.py
+│       ├── company_views.py
+│       ├── dashboard_views.py
+│       ├── event_views.py
+│       ├── portfolio_views.py
+│       ├── scenario_views.py
+│       ├── simulation_graph_views.py
+│       └── simulation_views.py
+├── staticfiles
+└── staticfiles.json
+```
+
+## Run the Complete System
+
+To run the complete system, you can use Docker Compose for setting up the entire environment with one command:
+
+```bash
+docker-compose up --build
+```
+
+This command will build and start the Django and Vite servers along with any other required services defined in the `docker-compose.yml` file.

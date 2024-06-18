@@ -1,5 +1,6 @@
 from collections import deque
 from django.db import transaction
+from django.utils import timezone
 from simulation.models import TransactionHistory
 
 class BuySellQueue:
@@ -49,52 +50,29 @@ class BuySellQueue:
     def complete_transaction(self, buyer, seller, asset, amount, price):
         seller.portfolio.stocks.remove(asset)
         buyer.portfolio.stocks.add(asset)
-
         seller.balance += price * amount
         buyer.balance -= price * amount
-
         seller.save()
         buyer.save()
-
-        TransactionHistory.objects.create(
-            portfolio=buyer.portfolio,
-            asset=asset.name,
-            transaction_type='buy',
-            amount=amount,
-            price=price
-        )
-
-        TransactionHistory.objects.create(
-            portfolio=seller.portfolio,
-            asset=asset.name,
-            transaction_type='sell',
-            amount=amount,
-            price=price
-        )
+        self.log_transaction(buyer, asset, 'buy', amount, price)
+        self.log_transaction(seller, asset, 'sell', amount, price)
 
     def partial_transaction(self, buyer, seller, asset, sell_amount, price):
         seller.portfolio.stocks.remove(asset)
         buyer.portfolio.stocks.add(asset)
-
         seller.balance += price * sell_amount
         buyer.balance -= price * sell_amount
-
         seller.save()
         buyer.save()
+        self.log_transaction(buyer, asset, 'buy', sell_amount, price)
+        self.log_transaction(seller, asset, 'sell', sell_amount, price)
 
+    def log_transaction(self, user, asset, transaction_type, amount, price):
         TransactionHistory.objects.create(
-            portfolio=buyer.portfolio,
+            portfolio=user.portfolio,
             asset=asset.name,
-            transaction_type='buy',
-            amount=sell_amount,
-            price=price
-        )
-
-        TransactionHistory.objects.create(
-            portfolio=seller.portfolio,
-            asset=asset.name,
-            transaction_type='sell',
-            amount=sell_amount,
+            transaction_type=transaction_type,
+            amount=amount,
             price=price
         )
 

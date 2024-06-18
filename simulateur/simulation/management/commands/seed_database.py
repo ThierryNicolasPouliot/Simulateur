@@ -14,12 +14,12 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         try:
             with transaction.atomic():
-                self.list()
+                self.seed_database()
             self.stdout.write(self.style.SUCCESS('Successfully seeded the database'))
         except Exception as e:
             self.stdout.write(self.style.ERROR(f'Error occurred: {e}'))
 
-    def list(self):
+    def seed_database(self):
         self.seed_users()
         self.seed_companies()
         self.seed_stocks()
@@ -169,7 +169,7 @@ class Command(BaseCommand):
         with open('data/scenarios.csv', newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
-                simulation_settings = SimulationSettings.objects.get(id=int(row['simulation_settings']))
+                simulation_settings = SimulationSettings.objects.first()  # Get the first SimulationSettings instance
                 scenario = Scenario.objects.create(
                     name=row['name'],
                     description=row['description'],

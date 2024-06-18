@@ -3,26 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <title>Market Overview</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
 </head>
-<body>
-    <h1>Market Overview</h1>
-    <h2>Stocks</h2>
-    <ul>
-        {% for stock in stocks %}
-            <li>{{ stock.company.name }}: ${{ stock.price }}</li>
-        {% endfor %}
-    </ul>
-    <h2>Cryptocurrencies</h2>
-    <ul>
-        {% for crypto in cryptos %}
-            <li>{{ crypto.name }}: ${{ crypto.price }}</li>
-        {% endfor %}
-    </ul>
-    <h2>Events</h2>
-    <ul>
-        {% for event in events %}
-            <li>{{ event.name }}: {{ event.description }}</li>
-        {% endfor %}
-    </ul>
+<body class="bg-gray-100 text-gray-800">
+    <div class="container mx-auto p-6">
+        <h1 class="text-3xl font-bold mb-6">Market Overview</h1>
+        <h2 class="text-2xl font-bold mb-4">Stocks</h2>
+        <ul class="list-disc pl-6">
+            {% for stock in stocks %}
+                <li>{{ stock.company.name }}: ${{ stock.price }}</li>
+            {% endfor %}
+        </ul>
+        <h2 class="text-2xl font-bold mb-4 mt-6">Cryptocurrencies</h2>
+        <ul class="list-disc pl-6">
+            {% for crypto in cryptos %}
+                <li>{{ crypto.name }}: ${{ crypto.price }}</li>
+            {% endfor %}
+        </ul>
+        <h2 class="text-2xl font-bold mb-4 mt-6">Events</h2>
+        <ul class="list-disc pl-6">
+            {% for event in events %}
+                <li>{{ event.name }}: {{ event.description }}</li>
+            {% endfor %}
+        </ul>
+    </div>
 </body>
 </html>

@@ -3,28 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <title>User Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
 </head>
-<body>
-    <h1>User Dashboard</h1>
-    <h2>Portfolio</h2>
-    <p>Balance: {{ portfolio.balance }}</p>
-    <h2>Recent Transactions</h2>
-    <ul>
-        {% for transaction in transactions %}
-            <li>{{ transaction.transaction_type }} {{ transaction.amount }} shares of {{ transaction.asset }} at ${{ transaction.price }}</li>
-        {% endfor %}
-    </ul>
-    <h2>Available Stocks</h2>
-    <ul>
-        {% for stock in stocks %}
-            <li>{{ stock.company.name }}: ${{ stock.price }}</li>
-        {% endfor %}
-    </ul>
-    <h2>Available Cryptocurrencies</h2>
-    <ul>
-        {% for crypto in cryptos %}
-            <li>{{ crypto.name }}: ${{ crypto.price }}</li>
-        {% endfor %}
-    </ul>
+<body class="bg-gray-100 text-gray-800">
+    <div class="container mx-auto p-6">
+        <h1 class="text-3xl font-bold mb-6">User Dashboard</h1>
+        <h2 class="text-2xl font-bold mb-4">Portfolio</h2>
+        <p>Balance: ${{ portfolio.balance }}</p>
+        <h2 class="text-2xl font-bold mb-4 mt-6">Recent Transactions</h2>
+        <ul class="list-disc pl-6">
+            {% for transaction in transactions %}
+                <li>{{ transaction.transaction_type }} {{ transaction.amount }} shares of {{ transaction.asset }} at ${{ transaction.price }}</li>
+            {% endfor %}
+        </ul>
+        <h2 class="text-2xl font-bold mb-4 mt-6">Available Stocks</h2>
+        <ul class="list-disc pl-6">
+            {% for stock in stocks %}
+                <li>{{ stock.company.name }}: ${{ stock.price }}</li>
+            {% endfor %}
+        </ul>
+        <h2 class="text-2xl font-bold mb-4 mt-6">Available Cryptocurrencies</h2>
+        <ul class="list-disc pl-6">
+            {% for crypto in cryptos %}
+                <li>{{ crypto.name }}: ${{ crypto.price }}</li>
+            {% endfor %}
+        </ul>
+        <button onclick="fetchUpdatedPortfolio()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4">Update Portfolio</button>
+    </div>
+    <script>
+        function fetchUpdatedPortfolio() {
+            axios.get('/api/portfolio/{{ request.user.id }}/')
+                .then(response => {
+                    // Update the portfolio data in the DOM
+                    console.log('Portfolio updated:', response.data);
+                })
+                .catch(error => {
+                    console.error('Error fetching portfolio:', error);
+                });
+        }
+    </script>
 </body>
 </html>

@@ -1,42 +1,15 @@
 # simulation/views/simulation_views.py
-
 import json
 import logging
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework import generics
-from simulation.views import admin_required
-
-from .models import Company, Scenario, Event, Stock
-from .serializers import CompanySerializer, ScenarioSerializer, EventSerializer
-from .logic.simulation_manager import SimulationManager
+from simulation.models import Scenario
+from simulation.logic.simulation_manager import SimulationManagerSingleton
+from simulation.decorators import admin_required
 
 logger = logging.getLogger(__name__)
-
-class CompanyList(View):
-    def get(self, request):
-        companies = list(Company.objects.values())
-        return JsonResponse(companies, safe=False)
-
-class CompanyCreate(generics.CreateAPIView):
-    queryset = Company.objects.all()
-    serializer_class = CompanySerializer
-
-class ScenarioCreate(generics.CreateAPIView):
-    queryset = Scenario.objects.all()
-    serializer_class = ScenarioSerializer
-
-class ScenarioList(generics.ListAPIView):
-    queryset = Scenario.objects.all()
-    serializer_class = ScenarioSerializer
-
-class EventList(View):
-    @method_decorator(admin_required)
-    def get(self, request):
-        events = list(Event.objects.values())
-        return JsonResponse(events, safe=False)
 
 @method_decorator(csrf_exempt, name='dispatch')
 @method_decorator(admin_required, name='dispatch')
@@ -47,8 +20,8 @@ class StartSimulation(View):
             scenario_id = data.get('scenario_id')
             time_unit = data.get('time_unit', 'second')
 
-            simulation_manager = SimulationManager(scenario_id, time_unit)
-            simulation_manager.start_simulation()
+            simulation_manager = SimulationManagerSingleton.get_instance(scenario_id)
+            simulation_manager.start_simulation(time_unit)
 
             return JsonResponse({'status': 'success'})
         except json.JSONDecodeError:
@@ -63,33 +36,79 @@ class StartSimulation(View):
 @method_decorator(admin_required, name='dispatch')
 class PauseSimulation(View):
     def post(self, request):
-        # Logic to pause the simulation
-        return JsonResponse({'status': 'paused'})
+        try:
+            data = json.loads(request.body)
+            scenario_id = data.get('scenario_id')
+
+            simulation_manager = SimulationManagerSingleton.get_instance(scenario_id)
+            simulation_manager.pause_simulation()
+
+            return JsonResponse({'status': 'paused'})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON data'}, status=400)
+        except Scenario.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Scenario not found'}, status=404)
+        except Exception as e:
+            logger.error(f"Error pausing simulation: {str(e)}")
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 @method_decorator(csrf_exempt, name='dispatch')
 @method_decorator(admin_required, name='dispatch')
 class StopSimulation(View):
     def post(self, request):
-        if scenario_id := request.session.get('scenario_id'):
-            try:
-                scenario = Scenario.objects.get(id=scenario_id)
-                scenario.running = False
-                scenario.save()
-                return JsonResponse({'status': 'stopped'})
-            except Scenario.DoesNotExist:
-                return JsonResponse({'status': 'error', 'message': 'Scenario not found'}, status=404)
-        return JsonResponse({'status': 'error', 'message': 'No scenario found'}, status=400)
+        try:
+            data = json.loads(request.body)
+            scenario_id = data.get('scenario_id')
+
+            simulation_manager = SimulationManagerSingleton.get_instance(scenario_id)
+            simulation_manager.stop_simulation()
+
+            SimulationManagerSingleton.remove_instance(scenario_id)
+            return JsonResponse({'status': 'stopped'})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON data'}, status=400)
+        except Scenario.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Scenario not found'}, status=404)
+        except Exception as e:
+            logger.error(f"Error stopping simulation: {str(e)}")
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 @method_decorator(csrf_exempt, name='dispatch')
 @method_decorator(admin_required, name='dispatch')
 class FastForwardSimulation(View):
     def post(self, request):
-        # Logic to fast forward the simulation
-        return JsonResponse({'status': 'fast-forwarded'})
+        try:
+            data = json.loads(request.body)
+            scenario_id = data.get('scenario_id')
+
+            simulation_manager = SimulationManagerSingleton.get_instance(scenario_id)
+            simulation_manager.fast_forward_simulation()
+
+            return JsonResponse({'status': 'fast-forwarded'})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON data'}, status=400)
+        except Scenario.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Scenario not found'}, status=404)
+        except Exception as e:
+            logger.error(f"Error fast-forwarding simulation: {str(e)}")
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 @method_decorator(csrf_exempt, name='dispatch')
 @method_decorator(admin_required, name='dispatch')
 class RewindSimulation(View):
     def post(self, request):
-        # Logic to rewind the simulation
-        return JsonResponse({'status': 'rewinded'})
+        try:
+            data = json.loads(request.body)
+            scenario_id = data.get('scenario_id')
+
+            simulation_manager = SimulationManagerSingleton.get_instance(scenario_id)
+            simulation_manager.rewind_simulation()
+
+            return JsonResponse({'status': 'rewinded'})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON data'}, status=400)
+        except Scenario.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Scenario not found'}, status=404)
+        except Exception as e:
+            logger.error(f"Error rewinding simulation: {str(e)}")
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
