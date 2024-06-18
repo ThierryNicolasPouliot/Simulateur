@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Company, Stock, Cryptocurrency, UserProfile, Event, SimulationSettings, Scenario, Team, Portfolio, TransactionHistory, Trigger, CustomStat
+from .models import Company, SimulationData, Stock, Cryptocurrency, UserProfile, Event, SimulationSettings, Scenario, Team, Portfolio, TransactionHistory, Trigger, CustomStat
 
 class CompanySerializer(serializers.ModelSerializer):
     class Meta:
@@ -67,4 +67,15 @@ class ScenarioSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Scenario
+        fields = '__all__'
+
+class SimulationDataSerializer(serializers.ModelSerializer):
+    scenario = ScenarioSerializer()
+    user = UserProfileSerializer()
+    team = TeamSerializer()
+    portfolio = PortfolioSerializer()
+    transaction_history = TransactionHistorySerializer(many=True)
+
+    class Meta:
+        model = SimulationData
         fields = '__all__'

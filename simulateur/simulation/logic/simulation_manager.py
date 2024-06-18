@@ -107,7 +107,7 @@ class SimulationManager:
             change = generate_random_walk_candle(asset.price, self.fluctuation_rate)
         else:
             change = generate_random_candle(asset.price, self.fluctuation_rate)
-        
+
         asset.open_price = change['Open']
         asset.high_price = change['High']
         asset.low_price = change['Low']
