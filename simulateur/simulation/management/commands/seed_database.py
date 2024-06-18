@@ -1,5 +1,7 @@
 # simulation/management/commands/seed_database.py
+
 import csv
+import json
 from datetime import datetime
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
@@ -12,21 +14,24 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         try:
             with transaction.atomic():
-                self.seed_users()
-                self.seed_companies()
-                self.seed_stocks()
-                self.seed_cryptocurrencies()
-                self.seed_teams()
-                self.seed_events()
-                self.seed_triggers()
-                self.seed_custom_stats()
-                self.seed_simulation_settings()
-                self.seed_scenarios()
-                self.seed_portfolios()
-                self.seed_transaction_history()
+                self.list()
             self.stdout.write(self.style.SUCCESS('Successfully seeded the database'))
         except Exception as e:
             self.stdout.write(self.style.ERROR(f'Error occurred: {e}'))
+
+    def list(self):
+        self.seed_users()
+        self.seed_companies()
+        self.seed_stocks()
+        self.seed_cryptocurrencies()
+        self.seed_teams()
+        self.seed_events()
+        self.seed_triggers()
+        self.seed_custom_stats()
+        self.seed_simulation_settings()
+        self.seed_scenarios()
+        self.seed_portfolios()
+        self.seed_transaction_history()
 
     def seed_users(self):
         with open('data/users.csv', newline='') as csvfile:
@@ -55,7 +60,9 @@ class Command(BaseCommand):
                     max_shares=int(row['max_shares']),
                     price_maximum=float(row['price_maximum']),
                     initial_price=float(row['initial_price']),
-                    current_price=float(row['current_price'])
+                    current_price=float(row['current_price']),
+                    pe_ratio=float(row['pe_ratio']),
+                    market_cap=float(row['market_cap'])
                 )
 
     def seed_stocks(self):
@@ -71,7 +78,10 @@ class Command(BaseCommand):
                     open_price=float(row['open_price']),
                     high_price=float(row['high_price']),
                     low_price=float(row['low_price']),
-                    close_price=float(row['close_price'])
+                    close_price=float(row['close_price']),
+                    quantity=int(row['quantity']),
+                    value_change=float(row['value_change']),
+                    value_history=json.loads(row['value_history'])
                 )
 
     def seed_cryptocurrencies(self):
@@ -81,7 +91,16 @@ class Command(BaseCommand):
                 Cryptocurrency.objects.create(
                     name=row['name'],
                     price=float(row['price']),
-                    price_maximum=float(row['price_maximum'])
+                    price_maximum=float(row['price_maximum']),
+                    partial_share=float(row['partial_share']),
+                    complete_share=int(row['complete_share']),
+                    open_price=float(row['open_price']),
+                    high_price=float(row['high_price']),
+                    low_price=float(row['low_price']),
+                    close_price=float(row['close_price']),
+                    quantity=float(row['quantity']),
+                    value_change=float(row['value_change']),
+                    value_history=json.loads(row['value_history'])
                 )
 
     def seed_teams(self):
@@ -136,11 +155,14 @@ class Command(BaseCommand):
                     max_users=int(row['max_users']),
                     max_companies=int(row['max_companies']),
                     timer_step=int(row['timer_step']),
+                    timer_step_unit=row['timer_step_unit'],
                     interval=int(row['interval']),
+                    interval_unit=row['interval_unit'],
                     max_interval=int(row['max_interval']),
                     fluctuation_rate=float(row['fluctuation_rate']),
                     time_unit=row['time_unit'],
-                    close_stock_market_at_night=row['close_stock_market_at_night']
+                    close_stock_market_at_night=row['close_stock_market_at_night'].lower() == 'true',
+                    noise_function=row['noise_function']
                 )
 
     def seed_scenarios(self):

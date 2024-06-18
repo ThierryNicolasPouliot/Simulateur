@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.utils.timezone import make_aware
 from datetime import datetime
 from .models import Company, Scenario, Event, Portfolio, Stock, Cryptocurrency, UserProfile, SimulationSettings
-from simulation.simulation_manager import SimulationManager
+from simulateur.simulation.logic.simulation_manager import SimulationManager
 
 class SimulationTests(TestCase):
     def setUp(self):

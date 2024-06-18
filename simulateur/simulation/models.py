@@ -1,4 +1,3 @@
-# simulation/models.py
 from datetime import timedelta, timezone, datetime
 from django.db import models
 from django.contrib.auth.models import User
@@ -32,6 +31,9 @@ class Stock(models.Model):
     high_price = models.FloatField(default=0.0)
     low_price = models.FloatField(default=0.0)
     close_price = models.FloatField(default=0.0)
+    quantity = models.IntegerField(default=0)
+    value_change = models.FloatField(default=0.0)
+    value_history = models.JSONField(default=list)
 
     def __str__(self):
         return f'{self.company.name} Stock'
@@ -51,6 +53,9 @@ class Cryptocurrency(models.Model):
     high_price = models.FloatField(default=0.0)
     low_price = models.FloatField(default=0.0)
     close_price = models.FloatField(default=0.0)
+    quantity = models.FloatField(default=0.0)
+    value_change = models.FloatField(default=0.0)
+    value_history = models.JSONField(default=list)
 
     def __str__(self):
         return self.name
@@ -132,6 +137,13 @@ class SimulationSettings(models.Model):
         ('year', 'Year')
     ]
 
+    NOISE_FUNCTION_CHOICES = [
+        ('brownian', 'Brownian Motion'),
+        ('monte_carlo', 'Monte Carlo'),
+        ('perlin', 'Perlin Noise'),
+        ('other', 'Other')
+    ]
+
     id = models.AutoField(primary_key=True)
     max_users = models.IntegerField(default=100)
     max_companies = models.IntegerField(default=50)
@@ -143,6 +155,7 @@ class SimulationSettings(models.Model):
     fluctuation_rate = models.FloatField(default=0.1)  # Rate of random fluctuation
     time_unit = models.CharField(max_length=6, choices=TIME_UNIT_CHOICES, default='minute')
     close_stock_market_at_night = models.BooleanField(default=True)  # New field
+    noise_function = models.CharField(max_length=20, choices=NOISE_FUNCTION_CHOICES, default='brownian')
 
     def __str__(self):
         return f'Simulation Settings:\n' \
@@ -153,12 +166,11 @@ class SimulationSettings(models.Model):
                f'  Max interval: {self.max_interval} seconds\n' \
                f'  Fluctuation rate: {self.fluctuation_rate}\n' \
                f'  Time unit: {self.get_time_unit_display()}\n' \
-               f'  Close stock market at night: {"Yes" if self.close_stock_market_at_night else "No"}'
+               f'  Close stock market at night: {"Yes" if self.close_stock_market_at_night else "No"}\n' \
+               f'  Noise function: {self.get_noise_function_display()}'
 
     class Meta:
         verbose_name_plural = "Simulation Settings"
-
-
 
 class Scenario(models.Model):
     id = models.AutoField(primary_key=True)
@@ -194,7 +206,6 @@ class Scenario(models.Model):
 
     class Meta:
         verbose_name_plural = "Scenarios"
-
 
 class Portfolio(models.Model):
     id = models.AutoField(primary_key=True)

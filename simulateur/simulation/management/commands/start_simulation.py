@@ -1,8 +1,5 @@
-# simulation/management/commands/start_simulation.py
-
 from django.core.management.base import BaseCommand
-from simulation.simulation_manager import SimulationManager
-import datetime
+from simulation.logic.simulation_manager import SimulationManager
 
 class Command(BaseCommand):
     help = 'Start the simulation based on a scenario'

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Dashboard</title>
+</head>
+<body>
+    <h1>User Dashboard</h1>
+    <h2>Portfolio</h2>
+    <p>Balance: {{ portfolio.balance }}</p>
+    <h2>Recent Transactions</h2>
+    <ul>
+        {% for transaction in transactions %}
+            <li>{{ transaction.transaction_type }} {{ transaction.amount }} shares of {{ transaction.asset }} at ${{ transaction.price }}</li>
+        {% endfor %}
+    </ul>
+    <h2>Available Stocks</h2>
+    <ul>
+        {% for stock in stocks %}
+            <li>{{ stock.company.name }}: ${{ stock.price }}</li>
+        {% endfor %}
+    </ul>
+    <h2>Available Cryptocurrencies</h2>
+    <ul>
+        {% for crypto in cryptos %}
+            <li>{{ crypto.name }}: ${{ crypto.price }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Market Overview</title>
+</head>
+<body>
+    <h1>Market Overview</h1>
+    <h2>Stocks</h2>
+    <ul>
+        {% for stock in stocks %}
+            <li>{{ stock.company.name }}: ${{ stock.price }}</li>
+        {% endfor %}
+    </ul>
+    <h2>Cryptocurrencies</h2>
+    <ul>
+        {% for crypto in cryptos %}
+            <li>{{ crypto.name }}: ${{ crypto.price }}</li>
+        {% endfor %}
+    </ul>
+    <h2>Events</h2>
+    <ul>
+        {% for event in events %}
+            <li>{{ event.name }}: {{ event.description }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
