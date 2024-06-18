@@ -3,7 +3,6 @@ from django.db import models
 from django.contrib.auth.models import User
 
 class Company(models.Model):
-    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100, default='')
     backstory = models.TextField(default='')
     max_shares = models.IntegerField(default=1000)
@@ -21,7 +20,6 @@ class Company(models.Model):
         verbose_name_plural = "Companies"
 
 class Stock(models.Model):
-    id = models.AutoField(primary_key=True)
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
     price = models.FloatField(default=0.0)
     last_updated = models.DateTimeField(auto_now=True)
@@ -42,7 +40,6 @@ class Stock(models.Model):
         verbose_name_plural = "Stocks"
 
 class Cryptocurrency(models.Model):
-    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100, default='')
     price = models.FloatField(default=0.0)
     last_updated = models.DateTimeField(auto_now=True)
@@ -64,7 +61,6 @@ class Cryptocurrency(models.Model):
         verbose_name_plural = "Cryptocurrencies"
 
 class Team(models.Model):
-    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100, default='')
     balance = models.FloatField(default=100000)
     borrowed_money = models.FloatField(default=0.0)
@@ -77,7 +73,6 @@ class Team(models.Model):
         verbose_name_plural = "Teams"
 
 class UserProfile(models.Model):
-    id = models.AutoField(primary_key=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     balance = models.FloatField(default=10000)
     team = models.ForeignKey(Team, on_delete=models.CASCADE, null=True, blank=True, related_name='user_profiles')
@@ -90,7 +85,6 @@ class UserProfile(models.Model):
         verbose_name_plural = "User Profiles"
 
 class Event(models.Model):
-    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100, default='')
     description = models.TextField(default='')
     impact = models.FloatField(default=0.0)
@@ -104,7 +98,6 @@ class Event(models.Model):
         verbose_name_plural = "Events"
 
 class Trigger(models.Model):
-    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100, default='')
     description = models.TextField(default='')
     trigger_type = models.CharField(max_length=100, default='')
@@ -117,7 +110,6 @@ class Trigger(models.Model):
         verbose_name_plural = "Triggers"
 
 class CustomStat(models.Model):
-    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100, default='')
     value = models.FloatField(default=0.0)
 
@@ -144,7 +136,6 @@ class SimulationSettings(models.Model):
         ('other', 'Other')
     ]
 
-    id = models.AutoField(primary_key=True)
     max_users = models.IntegerField(default=100)
     max_companies = models.IntegerField(default=50)
     timer_step = models.IntegerField(default=10)
@@ -154,7 +145,7 @@ class SimulationSettings(models.Model):
     max_interval = models.IntegerField(default=3000)  # Maximum interval in seconds
     fluctuation_rate = models.FloatField(default=0.1)  # Rate of random fluctuation
     time_unit = models.CharField(max_length=6, choices=TIME_UNIT_CHOICES, default='minute')
-    close_stock_market_at_night = models.BooleanField(default=True)  # New field
+    close_stock_market_at_night = models.BooleanField(default=True)
     noise_function = models.CharField(max_length=20, choices=NOISE_FUNCTION_CHOICES, default='brownian')
 
     def __str__(self):
@@ -173,7 +164,6 @@ class SimulationSettings(models.Model):
         verbose_name_plural = "Simulation Settings"
 
 class Scenario(models.Model):
-    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100, default='')
     description = models.TextField(default='')
     backstory = models.TextField(default='')
@@ -208,7 +198,6 @@ class Scenario(models.Model):
         verbose_name_plural = "Scenarios"
 
 class Portfolio(models.Model):
-    id = models.AutoField(primary_key=True)
     owner = models.OneToOneField(UserProfile, on_delete=models.CASCADE, null=True, blank=True, related_name='portfolio')
     team = models.OneToOneField(Team, on_delete=models.CASCADE, null=True, blank=True, related_name='portfolio')
     stocks = models.ManyToManyField(Stock)
@@ -227,7 +216,6 @@ class Portfolio(models.Model):
         verbose_name_plural = "Portfolios"
 
 class TransactionHistory(models.Model):
-    id = models.AutoField(primary_key=True)
     portfolio = models.ForeignKey(Portfolio, on_delete=models.CASCADE)
     asset = models.CharField(max_length=100, default='')
     transaction_type = models.CharField(max_length=100, default='')
@@ -273,3 +261,55 @@ class SimulationData(models.Model):
 
     class Meta:
         verbose_name_plural = "Simulation Data"
+
+class Exchange(models.Model):
+    name = models.CharField(max_length=100, default='')
+    description = models.TextField(default='')
+    stocks = models.ManyToManyField(Stock)
+    cryptocurrencies = models.ManyToManyField(Cryptocurrency)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name_plural = "Exchanges"
+
+class Order(models.Model):
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    ticker = models.CharField(max_length=100, default='')
+    quantity = models.IntegerField(default=0)
+    price = models.FloatField(default=0.0)
+    transaction_type = models.CharField(max_length=10, default='buy')
+    timestamp = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'Order for {self.ticker}'
+
+    class Meta:
+        verbose_name_plural = "Orders"
+
+class News(models.Model):
+    title = models.CharField(max_length=100, default='')
+    content = models.TextField(default='')
+    published_date = models.DateTimeField(auto_now=True)
+    impact = models.FloatField(default=0.0)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name_plural = "Market News"
+
+class Transaction(models.Model):
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    ticker = models.CharField(max_length=100, default='')
+    quantity = models.IntegerField(default=0)
+    price = models.FloatField(default=0.0)
+    transaction_type = models.CharField(max_length=10, default='buy')
+    timestamp = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'Transaction for {self.ticker}'
+
+    class Meta:
+        verbose_name_plural = "Transactions"
