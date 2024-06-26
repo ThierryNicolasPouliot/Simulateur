@@ -53,30 +53,9 @@ class ScenarioForm(forms.ModelForm):
     class Meta:
         model = Scenario
         fields = [
-            'name', 'description', 'backstory', 'difficulty_level', 'duration', 
+            'name', 'description', 'backstory', 'duration', 
             'companies', 'stocks', 'users', 'teams', 'events', 'triggers', 'simulation_settings'
         ]
-
-class PortfolioForm(forms.ModelForm):
-    class Meta:
-        model = Portfolio
-        fields = ['owner', 'team', 'stocks']
-
-class TransactionHistoryForm(forms.ModelForm):
-    class Meta:
-        model = TransactionHistory
-        fields = ['portfolio', 'asset', 'transaction_type', 'amount', 'price']
-
-class SimulationDataForm(forms.ModelForm):
-    class Meta:
-        model = SimulationData
-        fields = ['scenario', 'start_time', 'end_time', 'is_active', 'price_changes', 'transactions']
-
-class OrderForm(forms.ModelForm):
-    class Meta:
-        model = Order
-        fields = ['user', 'ticker', 'quantity', 'price', 'transaction_type']
-
 class NewsForm(forms.ModelForm):
     class Meta:
         model = News
