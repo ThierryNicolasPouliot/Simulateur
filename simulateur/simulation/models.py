@@ -34,8 +34,33 @@ class Team(models.Model):
     def __str__(self):
         return self.name
 
+    def generate_join_link(self):
+        unique_key = get_random_string(32)  # Generate a unique key for the link
+        join_link = JoinLink.objects.create(team=self, key=unique_key)
+        return join_link.get_absolute_url()
+
     class Meta:
         verbose_name_plural = "Teams"
+
+class JoinLink(models.Model):
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='join_links')
+    key = models.CharField(max_length=32, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+
+    def save(self, *args, **kwargs):
+        if not self.expires_at:
+            self.expires_at = timezone.now() + timedelta(hours=1)  # Set expiration time to 1 hour
+        super().save(*args, **kwargs)
+
+    def is_expired(self):
+        return timezone.now() > self.expires_at
+
+    def get_absolute_url(self):
+        return reverse('join_team', kwargs={'team_id': self.team.id, 'key': self.key})
+
+    class Meta:
+        verbose_name_plural = "Join Links"
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
