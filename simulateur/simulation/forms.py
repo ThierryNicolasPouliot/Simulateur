@@ -8,7 +8,7 @@ from simulation.models import (
 class CompanyForm(forms.ModelForm):
     class Meta:
         model = Company
-        fields = ['name', 'backstory']
+        fields = ['name', 'backstory', 'sector', 'country', 'industry']
 
 class StockForm(forms.ModelForm):
     class Meta:
@@ -33,12 +33,12 @@ class UserProfileForm(forms.ModelForm):
 class EventForm(forms.ModelForm):
     class Meta:
         model = Event
-        fields = ['name', 'description', 'impact', 'event_type', 'trigger_date']
+        fields = ['name', 'description', 'impact', 'event_type', 'trigger_date', 'scenario']
 
 class TriggerForm(forms.ModelForm):
     class Meta:
         model = Trigger
-        fields = ['name', 'description', 'trigger_type', 'trigger_value', 'event']
+        fields = ['name', 'description', 'trigger_type', 'trigger_value', 'event', 'scenario']
 
 class SimulationSettingsForm(forms.ModelForm):
     class Meta:
@@ -53,10 +53,31 @@ class ScenarioForm(forms.ModelForm):
     class Meta:
         model = Scenario
         fields = [
-            'name', 'description', 'backstory', 'duration', 
+            'name', 'description', 'backstory', 'difficulty_level', 'duration', 
             'companies', 'stocks', 'users', 'teams', 'events', 'triggers', 'simulation_settings'
         ]
+
+class PortfolioForm(forms.ModelForm):
+    class Meta:
+        model = Portfolio
+        fields = ['owner', 'team', 'stocks']
+
+class TransactionHistoryForm(forms.ModelForm):
+    class Meta:
+        model = TransactionHistory
+        fields = ['portfolio', 'asset', 'transaction_type', 'amount', 'price']
+
+class SimulationDataForm(forms.ModelForm):
+    class Meta:
+        model = SimulationData
+        fields = ['scenario', 'start_time', 'end_time', 'is_active', 'price_changes', 'transactions']
+
+class OrderForm(forms.ModelForm):
+    class Meta:
+        model = Order
+        fields = ['user', 'ticker', 'quantity', 'price', 'transaction_type']
+
 class NewsForm(forms.ModelForm):
     class Meta:
         model = News
-        fields = ['title', 'content', 'impact', 'event']
+        fields = ['title', 'content', 'impact', 'event', 'scenario']
