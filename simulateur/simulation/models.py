@@ -1,10 +1,15 @@
 from datetime import timedelta, timezone, datetime
 from django.db import models
 from django.contrib.auth.models import User
+from django.urls import reverse
+from django.utils.crypto import get_random_string
 
 class Company(models.Model):
     name = models.CharField(max_length=100, default='')
     backstory = models.TextField(default='')
+    sector = models.CharField(max_length=100, default='')
+    country = models.CharField(max_length=100, default='')
+    industry = models.CharField(max_length=100, default='')
 
     def __str__(self):
         return self.name
@@ -76,9 +81,9 @@ class UserProfile(models.Model):
 class Event(models.Model):
     name = models.CharField(max_length=100, default='')
     description = models.TextField(default='')
-    impact = models.FloatField(default=0.0)
     event_type = models.CharField(max_length=100, default='')
     trigger_date = models.DateTimeField()
+    scenario = models.ForeignKey('Scenario', on_delete=models.CASCADE, related_name='events')
 
     def __str__(self):
         return self.name
@@ -91,7 +96,8 @@ class Trigger(models.Model):
     description = models.TextField(default='')
     trigger_type = models.CharField(max_length=100, default='')
     trigger_value = models.FloatField(default=0.0)
-    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='triggers')
+    scenario = models.ForeignKey('Scenario', on_delete=models.CASCADE, related_name='triggers')
 
     def __str__(self):
         return self.name
@@ -193,8 +199,8 @@ class SimulationData(models.Model):
     start_time = models.DateTimeField(auto_now_add=True)
     end_time = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
-    price_changes = models.JSONField(default=list)  # Storing price changes as a JSON field
-    transactions = models.JSONField(default=list)  # Storing transactions as a JSON field
+    price_changes = models.JSONField(default=list)
+    transactions = models.JSONField(default=list)
 
     def __str__(self):
         return f'Simulation for {self.scenario.name}'
@@ -234,8 +240,8 @@ class News(models.Model):
     title = models.CharField(max_length=100, default='')
     content = models.TextField(default='')
     published_date = models.DateTimeField(auto_now=True)
-    impact = models.FloatField(default=0.0)
-    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='news')
+    scenario = models.ForeignKey(Scenario, on_delete=models.CASCADE, related_name='news')
 
     def __str__(self):
         return self.title
