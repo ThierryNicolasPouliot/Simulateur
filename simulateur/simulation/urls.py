@@ -44,6 +44,7 @@ api_patterns = [
     path('stock/sell/', SellStock.as_view(), name='sell-stock'),
     path('graph/', SimulationGraphView.as_view(), name='simulation-graph'),
     path('settings/', SimulationSettingsView.as_view(), name='simulation-settings'),
+    path('join-team/<int:team_id>/<str:key>/', JoinTeamView.as_view(), name='join_team'),
 ]
 
 # Combine both HTML and API patterns into a single list
